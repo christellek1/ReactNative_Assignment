@@ -86,6 +86,7 @@ export const createStyles = (colors: ThemeColors, theme: Theme) => StyleSheet.cr
     backgroundColor: colors.background,
     borderWidth: 0.3,
     borderColor: colors.border,
+  
   },
   favoritesToggleActive: {
     backgroundColor: theme === 'light' ? 'rgba(91, 33, 182, 0.1)' : 'rgba(139, 92, 246, 0.2)',
@@ -176,7 +177,7 @@ export const createStyles = (colors: ThemeColors, theme: Theme) => StyleSheet.cr
   },
   themeToggleContainer: {
   position: 'absolute',
-  bottom: 30,
+  bottom: 70,
   right: 20,
   backgroundColor: colors.cardBg,
   width: 60,
@@ -184,7 +185,6 @@ export const createStyles = (colors: ThemeColors, theme: Theme) => StyleSheet.cr
   borderRadius: 30,
   justifyContent: 'center',
   alignItems: 'center',
-  elevation: 8,
   shadowColor: '#000',
   shadowOffset: { width: 0, height: 2 },
   shadowOpacity: 0.2,
@@ -199,10 +199,36 @@ themeToggleButton: {
   alignItems: 'center',
   borderWidth: 1,
   borderColor: colors.border,
+  
 },
 themeToggleSymbol: {
   fontSize: normalizeFontSize(28),
   color: colors.primary,
   fontWeight: 'bold',
 },
+bottomNav: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  paddingVertical: 12,
+  paddingHorizontal: 40,
+  backgroundColor: '#fff',
+  borderTopWidth: 1,
+  borderTopColor: '#e0e0e0',
+},
+
+navButton: {
+  padding: 8,
+  borderRadius: 24, // makes circle background possible
+},
+
+activeNavButton: {
+  backgroundColor: '#000', // black background when active
+},
+
+navIcon: {
+  width: 26,
+  height: 26,
+},
+
 });
