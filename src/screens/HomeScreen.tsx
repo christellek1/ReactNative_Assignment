@@ -133,12 +133,12 @@ const WelcomeScreen = ({ navigation }: { navigation: any }) => {
 
         <TouchableOpacity
           onPress={() => {
-            setActiveTab('Profile');
-            navigation.navigate('Profile');
+            setActiveTab('ProfileScreen');
+            navigation.navigate('ProfileScreen');
           }}
           style={[
             styles.navButton,
-            activeTab === 'Profile' && styles.activeNavButton,
+            activeTab === 'ProfileScreen' && styles.activeNavButton,
           ]}
         >
           <Image
@@ -151,6 +151,8 @@ const WelcomeScreen = ({ navigation }: { navigation: any }) => {
         </TouchableOpacity>
       </View>
     </SafeAreaView>
+
+    
   );
 };
 

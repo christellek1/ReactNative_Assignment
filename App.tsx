@@ -7,16 +7,17 @@ import OTPScreen from './src/screens/OTP';
 import HomeScreen from './src/screens/HomeScreen';
 import SignUp from './src/screens/SignUpScreen';
 import ProductDetails from './src/screens/ProductDetailsScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
 import { AuthProvider } from './src/context/AuthContext';
 import { ThemeProvider } from './src/context/ThemeContext';
 
-// Define the RootStackParamList for type-safe navigation
 export type RootStackParamList = {
   Auth: undefined;
   OTP: undefined;
   Home: undefined;
   SignUp: undefined;
-  ProductDetails: { productId: string }; // Specify productId as a parameter
+  ProductDetails: { productId: string }; 
+  ProfileScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -50,6 +51,11 @@ const App: React.FC = () => {
         <Stack.Screen
           name="ProductDetails"
           component={ProductDetails}
+          options={{ headerShown: false }} // Hide the header for ProductDetails screen
+        />
+                <Stack.Screen
+          name="ProfileScreen"
+          component={ProfileScreen}
           options={{ headerShown: false }} // Hide the header for ProductDetails screen
         />
       </Stack.Navigator>
