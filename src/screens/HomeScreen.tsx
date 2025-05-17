@@ -15,8 +15,8 @@ import { ProductCard } from '../components/atoms/HomeScreen/Card';
 import { HomeHeader } from '../components/atoms/HomeScreen/Header';
 import { ThemeToggle } from '../components/atoms/HomeScreen/ThemeToggle';
 
-// Import your images here (adjust paths as needed)
-import images from '../assets/images'; // update this path
+// Import your images
+import images from '../assets/images';
 
 const { home: HomeImage, plus: AddImage, user: ProfileImage } = images;
 
@@ -115,7 +115,7 @@ const WelcomeScreen = ({ navigation }: { navigation: any }) => {
         <TouchableOpacity
           onPress={() => {
             setActiveTab('Add');
-            console.log('Add action');
+            navigation.navigate('UploadImage'); 
           }}
           style={[
             styles.navButton,
@@ -145,14 +145,12 @@ const WelcomeScreen = ({ navigation }: { navigation: any }) => {
             source={ProfileImage}
             style={[
               styles.navIcon,
-              { tintColor: activeTab === 'Profile' ? '#fff' : '#333' },
+              { tintColor: activeTab === 'ProfileScreen' ? '#fff' : '#333' }, 
             ]}
           />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
-
-    
   );
 };
 

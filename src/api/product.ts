@@ -15,7 +15,7 @@ export const getProductById = async (id: string): Promise<ApiResponse<any>> => {
 
 // Add a product
 export const addProduct = async (productData: FormData): Promise<ApiResponse<any>> => {
-  const response = await axiosInstance.post('/products', productData, {
+  const response = await axiosInstance.post('/api/products', productData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return response.data;

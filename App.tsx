@@ -8,6 +8,8 @@ import HomeScreen from './src/screens/HomeScreen';
 import SignUp from './src/screens/SignUpScreen';
 import ProductDetails from './src/screens/ProductDetailsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
+import UploadImage from './src/screens/UploadImage'; // PascalCase import
+
 import { AuthProvider } from './src/context/AuthContext';
 import { ThemeProvider } from './src/context/ThemeContext';
 
@@ -16,8 +18,9 @@ export type RootStackParamList = {
   OTP: undefined;
   Home: undefined;
   SignUp: undefined;
-  ProductDetails: { productId: string }; 
+  ProductDetails: { productId: string };
   ProfileScreen: undefined;
+  UploadImage: undefined; // PascalCase route name
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -26,41 +29,46 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <ThemeProvider>
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Auth">
-        <Stack.Screen
-          name="Auth"
-          component={AuthScreen}
-          options={{ headerShown: false }} // Hide the header for AuthScreen
-        />
-        <Stack.Screen
-          name="OTP"
-          component={OTPScreen}
-          options={{ headerShown: false }} // Hide the header for OTPScreen
-        />
-        <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{ headerShown: false }} // Hide the header for HomeScreen
-        />
-        <Stack.Screen
-          name="SignUp"
-          component={SignUp}
-          options={{ headerShown: false }} // Hide the header for SignUp screen
-        />
-        <Stack.Screen
-          name="ProductDetails"
-          component={ProductDetails}
-          options={{ headerShown: false }} // Hide the header for ProductDetails screen
-        />
-                <Stack.Screen
-          name="ProfileScreen"
-          component={ProfileScreen}
-          options={{ headerShown: false }} // Hide the header for ProductDetails screen
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
-    </ThemeProvider>
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName="Auth">
+            <Stack.Screen
+              name="Auth"
+              component={AuthScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="OTP"
+              component={OTPScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Home"
+              component={HomeScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="SignUp"
+              component={SignUp}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ProductDetails"
+              component={ProductDetails}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ProfileScreen"
+              component={ProfileScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="UploadImage"   
+              component={UploadImage} 
+              options={{ headerShown: false }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </ThemeProvider>
     </AuthProvider>
   );
 };
