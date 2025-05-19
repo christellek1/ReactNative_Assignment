@@ -12,12 +12,15 @@ export const signUp = async (
   formData: FormData
 ): Promise<ApiResponse<{ message: string }>> => {
   const response = await axiosInstance.post<ApiResponse<{ message: string }>>(
-    '/auth/signup',
+    '/api/auth/signup',
+    
     formData,
+    
     {
       headers: { 'Content-Type': 'multipart/form-data' },
     }
   );
+  
   return response.data;
 };
 

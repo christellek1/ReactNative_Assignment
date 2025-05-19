@@ -7,10 +7,13 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../App';
 import styles from '../../styles/SignUpStyle';
-import  SignUpMain  from '../components/organism/SignUp';
+import SignUpMain from '../components/organism/SignUp';
+import { useAuthStore } from '../store/authStore';
+import axiosInstance from '../api/axiosInstance';
 
 const schema = z.object({
-  name: z.string().min(1, 'Name is required'),
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   phone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits'),
@@ -20,6 +23,8 @@ type SignUpFormData = z.infer<typeof schema>;
 
 const SignUpScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const setTokens = useAuthStore(state => state.setTokens);
+
   const [agree, setAgree] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -39,13 +44,29 @@ const SignUpScreen: React.FC = () => {
     }
 
     try {
+      console.log('📤 Submitting form with:', data);
       setIsSubmitting(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('⏳ Sending request to /api/auth/signup');
+
+      const response = await axiosInstance.post('/api/auth/signup', {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        password: data.password,
+        phone: data.phone,
+      });
+
+      const result = response.data;
+      console.log('✅ Signup success:', result);
+
+      setTokens(result.accessToken, result.refreshToken);
       navigation.navigate('OTP');
-    } catch (error) {
-      Alert.alert('Error', 'Sign up failed. Please try again.');
+    } catch (error: any) {
+      console.error('❌ Signup error:', error?.response?.data || error);
+      Alert.alert('Error', error?.response?.data?.message || 'Sign up failed. Please try again.');
     } finally {
       setIsSubmitting(false);
+      console.log('🧹 Done submitting');
     }
   };
 
@@ -54,7 +75,7 @@ const SignUpScreen: React.FC = () => {
   };
 
   const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
+    setShowPassword(prev => !prev);
   };
 
   return (

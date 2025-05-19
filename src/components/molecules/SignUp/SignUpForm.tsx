@@ -25,10 +25,20 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
   style,
 }) => (
   <View style={{ marginTop: normalize(30) }}>
+    {/* ✅ First Name */}
     <SignUpInputField
-      placeholder="Name"
-      onChangeText={(text) => setValue('name', text)}
-      error={errors.name?.message}
+      placeholder="First Name"
+      onChangeText={(text) => setValue('firstName', text)}
+      error={errors.firstName?.message}
+      style={style}
+      autoCapitalize="words"
+    />
+
+    {/* ✅ Last Name */}
+    <SignUpInputField
+      placeholder="Last Name"
+      onChangeText={(text) => setValue('lastName', text)}
+      error={errors.lastName?.message}
       style={style}
       autoCapitalize="words"
     />

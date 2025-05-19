@@ -17,9 +17,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Pass email and password as two arguments
       const tokens = await loginApi(email, password);
 
-      // tokens is { accessToken: string; refreshToken: string; }
       if (tokens.accessToken) {
-        // Save tokens if you want, e.g., AsyncStorage.setItem(...)
         setIsAuthenticated(true);
       } else {
         throw new Error('Invalid credentials');

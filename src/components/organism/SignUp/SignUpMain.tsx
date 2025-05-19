@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, StyleSheet, ViewStyle } from 'react-native';
 import { SignUpHeader } from '../../molecules/SignUp/SignUpHeader';
 import { SignUpForm } from '../../molecules/SignUp/SignUpForm';
 import { SignUpSocialAuth } from '../../molecules/SignUp/SignUpSocialAuth';
@@ -8,7 +8,7 @@ import { SignUpNavigationLink } from '../../atoms/SignUp/NavigationLink';
 import { SignUpMainProps } from './SignUpMain.types';
 
 const SignUpMain: React.FC<SignUpMainProps> = ({
-  style,
+  style = {},
   errors,
   setValue,
   agree,
@@ -18,33 +18,48 @@ const SignUpMain: React.FC<SignUpMainProps> = ({
   isSubmitting,
   onSubmit,
   onNavigateToLogin,
-}) => (
-  <ScrollView contentContainerStyle={style.container} keyboardShouldPersistTaps="handled">
-    <SignUpHeader style={style} />
+}) => {
+  const containerStyle: ViewStyle = style?.container || defaultStyles.container;
 
-    <SignUpForm
-      errors={errors}
-      setValue={setValue}
-      agree={agree}
-      setAgree={setAgree}
-      showPassword={showPassword}
-      togglePasswordVisibility={togglePasswordVisibility}
-      style={style}
-    />
+  return (
+    <ScrollView
+      contentContainerStyle={containerStyle}
+      keyboardShouldPersistTaps="handled"
+    >
+      <SignUpHeader style={style} />
 
-    <SignUpButton
-      isSubmitting={isSubmitting}
-      onPress={onSubmit}
-      style={style}
-    />
+      <SignUpForm
+        errors={errors}
+        setValue={setValue}
+        agree={agree}
+        setAgree={setAgree}
+        showPassword={showPassword}
+        togglePasswordVisibility={togglePasswordVisibility}
+        style={style}
+      />
 
-    <SignUpSocialAuth style={style} />
+      <SignUpButton
+        isSubmitting={isSubmitting}
+        onPress={onSubmit}
+        style={style}
+      />
 
-    <SignUpNavigationLink
-      onPress={onNavigateToLogin}
-      style={style}
-    />
-  </ScrollView>
-);
+      <SignUpSocialAuth style={style} />
+
+      <SignUpNavigationLink
+        onPress={onNavigateToLogin}
+        style={style}
+      />
+    </ScrollView>
+  );
+};
 
 export default SignUpMain;
+
+const defaultStyles = StyleSheet.create({
+  container: {
+    padding: 20,
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+});
