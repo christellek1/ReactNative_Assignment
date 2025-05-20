@@ -73,11 +73,11 @@ const SignUpScreen: React.FC = () => {
         Alert.alert('Signup Failed', 'Unexpected response from server.');
       }
     } catch (error: any) {
-      console.error('❌ Signup error:', error?.response?.data || error);
+      console.error(' Signup error:', error?.response?.data || error);
       Alert.alert('Error', error?.response?.data?.message || 'Sign up failed. Please try again.');
     } finally {
       setIsSubmitting(false);
-      console.log('🧹 Done submitting');
+      console.log(' Done submitting');
     }
   };
 

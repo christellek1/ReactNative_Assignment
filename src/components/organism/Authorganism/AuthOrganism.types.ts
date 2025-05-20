@@ -3,6 +3,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../../App';
 
 export interface AuthOrganismProps {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'Auth'>;
+  navigation:NativeStackNavigationProp<RootStackParamList, 'Auth'>;
   mainImage: ImageSourcePropType;
+  onLogin?: (email: string, password: string) => Promise<void>;
 }
