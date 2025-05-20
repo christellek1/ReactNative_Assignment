@@ -15,8 +15,8 @@ import { ThemeProvider } from './src/context/ThemeContext';
 
 export type RootStackParamList = {
   Auth: undefined;
-  OTP: undefined;
-  Home: undefined;
+  OTP: { email: string };
+    Home: undefined;
   SignUp: undefined;
   ProductDetails: { productId: string };
   ProfileScreen: undefined;

@@ -1,5 +1,6 @@
+// context/AuthContext.tsx
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import {  loginApi } from '../api/auth';  // your API login function import
+import { loginApi } from '../api/auth';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -14,18 +15,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string) => {
     try {
-      // Pass email and password as two arguments
       const tokens = await loginApi(email, password);
-
       if (tokens.accessToken) {
         setIsAuthenticated(true);
       } else {
         throw new Error('Invalid credentials');
       }
-    } catch (error) {
-      throw new Error(
-        error instanceof Error ? error.message : 'Login failed'
-      );
+    } catch (error: any) {
+      console.error(error.message);
+      throw new Error(error.message);
     }
   };
 

@@ -44,9 +44,9 @@ const SignUpScreen: React.FC = () => {
     }
 
     try {
-      console.log('📤 Submitting form with:', data);
+      console.log(' Submitting form with:', data);
       setIsSubmitting(true);
-      console.log('⏳ Sending request to /api/auth/signup');
+      console.log(' Sending request to /api/auth/signup');
 
       const response = await axiosInstance.post('/api/auth/signup', {
         firstName: data.firstName,
@@ -57,10 +57,21 @@ const SignUpScreen: React.FC = () => {
       });
 
       const result = response.data;
-      console.log('✅ Signup success:', result);
 
-      setTokens(result.accessToken, result.refreshToken);
-      navigation.navigate('OTP');
+      console.log(' Signup success:', result);
+
+      if (result.success && result.data) {
+        // Save tokens if returned after signup
+        const { accessToken, refreshToken } = result.data;
+        if (accessToken && refreshToken) {
+          setTokens(accessToken, refreshToken);
+        }
+
+        // Navigate to OTP verification screen passing the email
+        navigation.navigate('OTP', { email: data.email });
+      } else {
+        Alert.alert('Signup Failed', 'Unexpected response from server.');
+      }
     } catch (error: any) {
       console.error('❌ Signup error:', error?.response?.data || error);
       Alert.alert('Error', error?.response?.data?.message || 'Sign up failed. Please try again.');

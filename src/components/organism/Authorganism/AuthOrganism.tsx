@@ -21,7 +21,7 @@ const AuthOrganism: React.FC<AuthOrganismProps> = ({ navigation, mainImage }) =>
 
     try {
       await login(email, password);
-      navigation.navigate('OTP'); // Or 'Dashboard', depending on your flow
+      navigation.navigate('Home'); // Or 'Dashboard', depending on your flow
     } catch (error) {
       Alert.alert('Login Failed', error instanceof Error ? error.message : 'Invalid email or password');
     }

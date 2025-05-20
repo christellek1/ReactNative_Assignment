@@ -30,22 +30,32 @@ export const verifyOtp = async (
 ): Promise<ApiResponse<{ message: string; isEmailVerified: boolean }>> => {
   const response = await axiosInstance.post<
     ApiResponse<{ message: string; isEmailVerified: boolean }>
-  >('/auth/verify-otp', data);
+  >('/api/auth/verify-otp', data);
   return response.data;
 };
 
 // Login
-export const loginApi = async (email: string, password: string): Promise<{ accessToken: string; refreshToken: string }> => {
-  const response = await axiosInstance.post('/api/auth/login', {
-    email,
-    password,
-    token_expires_in: '1y' // based on your Postman test
-  });
 
-  if (response.data.success) {
-    return response.data.data; // contains accessToken and refreshToken
-  } else {
-    throw new Error('Login failed');
+export const loginApi = async (email: string, password: string) => {
+  try {
+    const response = await axiosInstance.post('/api/auth/login', {
+      email,
+      password,
+    });
+
+    const tokens = response.data?.data;
+
+    if (!tokens?.accessToken) {
+      throw new Error('No access token received');
+    }
+
+    // Set token in axios for future requests
+    axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${tokens.accessToken}`;
+
+    return tokens;
+  } catch (error: any) {
+    console.error('Login failed:', error.response?.data || error.message);
+    throw new Error('Login failed: ' + (error.response?.data?.message || error.message));
   }
 };
 
@@ -58,4 +68,18 @@ export const refreshToken = async (
     { refreshToken }
   );
   return response.data;
+};
+
+
+//refresh otp
+export const resendOtpApi = async (email: string) => {
+  try {
+    const response = await axiosInstance.post('/api/auth/resend-verification-otp', {
+      email,
+    });
+
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to resend OTP');
+  }
 };

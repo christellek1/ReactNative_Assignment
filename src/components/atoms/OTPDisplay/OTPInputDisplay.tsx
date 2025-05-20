@@ -12,7 +12,7 @@ const OTPInputDisplay: React.FC<OTPInputDisplayProps> = ({
 }) => (
   <View style={containerStyle}>
     <Text style={placeholderStyle}>
-      {otpValue.padEnd(4, '-')}
+      {otpValue.padEnd(6, '-')}
     </Text>
     {otpValue.length > 0 && (
       <TouchableOpacity
