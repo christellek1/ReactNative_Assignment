@@ -230,5 +230,58 @@ navIcon: {
   width: 26,
   height: 26,
 },
-
+headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    justifyContent: 'space-between',
+  },
+  searchWrapper: {
+    flex: 1,
+    backgroundColor: 'white',
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    marginRight: 10,
+    height: 40,
+  },
+  searchInput: {
+    fontSize: 16,
+    color: 'black',
+  },
+  sortButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ccc',
+  },
+  sortButtonActive: {
+    backgroundColor: '#9c80d8', // lighter purple
+  },
+  sortButtonText: {
+    fontSize: 14,
+    color: 'black',
+    marginRight: 8,
+  },
+  sortButtonTextActive: {
+    color: 'white',
+  },
+  arrow: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderBottomWidth: 8,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: 'white',
+    transform: [{ rotate: '0deg' }],
+  },
+  arrowDown: {
+    transform: [{ rotate: '180deg' }],
+  },
 });
+
