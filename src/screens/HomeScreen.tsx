@@ -6,21 +6,17 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   ActivityIndicator,
   TextInput,
-  Platform,
 } from 'react-native';
 import { createStyles } from '../../styles/HomeStyle';
 import { useTheme } from '../context/ThemeContext';
 import { ProductCard } from '../components/atoms/HomeScreen/Card';
 import { HomeHeader } from '../components/atoms/HomeScreen/Header';
 import { ThemeToggle } from '../components/atoms/HomeScreen/ThemeToggle';
-import images from '../assets/images';
 import axiosInstance from '../api/axiosInstance';
 import { useAuthStore } from '../store/authStore';
-
-const { home: HomeImage, plus: AddImage, user: ProfileImage } = images;
+import Navbar from '../components/molecules/Navbar';
 
 const WelcomeScreen = ({ navigation }: { navigation: any }) => {
   const { theme, colors, toggleTheme } = useTheme();
@@ -145,30 +141,29 @@ const WelcomeScreen = ({ navigation }: { navigation: any }) => {
         toggleFavoritesView={toggleFavoritesView}
       />
 
-       <View style={styles.headerContainer}>
-      <View style={styles.searchWrapper}>
-        <TextInput
-          placeholder="Search products..."
-          placeholderTextColor="grey"
-          value={searchTerm}
-          onChangeText={onChangeSearch}
-          style={styles.searchInput}
-          returnKeyType="search"
-          clearButtonMode="while-editing"
-        />
-      </View>
+      <View style={styles.headerContainer}>
+        <View style={styles.searchWrapper}>
+          <TextInput
+            placeholder="Search products..."
+            placeholderTextColor="grey"
+            value={searchTerm}
+            onChangeText={onChangeSearch}
+            style={styles.searchInput}
+            returnKeyType="search"
+            clearButtonMode="while-editing"
+          />
+        </View>
 
-      <TouchableOpacity
-        activeOpacity={0.8}
-        style={[styles.sortButton, sortOrder !== '' && styles.sortButtonActive]}
-        onPress={cycleSortOrder}
-      >
-        <Text style={[styles.sortButtonText, sortOrder !== '' && styles.sortButtonTextActive]}>
-          Price: {sortOrder === '' ? 'None' : sortOrder === 'asc' ? 'Low to High' : 'High to Low'}
-        </Text>
-        <View style={[styles.arrow, sortOrder === 'desc' && styles.arrowDown]} />
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={[styles.sortButton, sortOrder !== '' && styles.sortButtonActive]}
+          onPress={cycleSortOrder}
+        >
+          <Text style={[styles.sortButtonText, sortOrder !== '' && styles.sortButtonTextActive]}>
+            Price: {sortOrder === '' ? 'None' : sortOrder === 'asc' ? 'Low to High' : 'High to Low'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       <FlatList
         data={displayedProducts}
@@ -218,49 +213,15 @@ const WelcomeScreen = ({ navigation }: { navigation: any }) => {
 
       <ThemeToggle theme={theme} toggleTheme={toggleTheme} colors={colors} />
 
-      <View style={styles.bottomNav}>
-        <TouchableOpacity
-          onPress={() => {
-            setActiveTab('Home');
-            navigation.navigate('Home');
-          }}
-          style={[styles.navButton, activeTab === 'Home' && styles.activeNavButton]}
-        >
-          <Image
-            source={HomeImage}
-            style={[styles.navIcon, { tintColor: activeTab === 'Home' ? '#fff' : '#333' }]}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => {
-            setActiveTab('Add');
-            navigation.navigate('UploadImage');
-          }}
-          style={[styles.navButton, activeTab === 'Add' && styles.activeNavButton]}
-        >
-          <Image
-            source={AddImage}
-            style={[styles.navIcon, { tintColor: activeTab === 'Add' ? '#fff' : '#333' }]}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => {
-            setActiveTab('ProfileScreen');
-            navigation.navigate('ProfileScreen');
-          }}
-          style={[styles.navButton, activeTab === 'ProfileScreen' && styles.activeNavButton]}
-        >
-          <Image
-            source={ProfileImage}
-            style={[styles.navIcon, { tintColor: activeTab === 'ProfileScreen' ? '#fff' : '#333' }]}
-          />
-        </TouchableOpacity>
-      </View>
+      <Navbar
+        activeTab={activeTab}
+        navigation={navigation}
+        colors={colors}
+        theme={theme}
+        setActiveTab={setActiveTab}
+      />
     </SafeAreaView>
   );
 };
-
 
 export default WelcomeScreen;
