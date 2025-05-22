@@ -1,5 +1,5 @@
 // src/screens/ProductDetailsScreen.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,15 +9,17 @@ import {
   Dimensions,
   Share,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../App';
 import styles from '../../styles/Details';
 import { useTheme } from '../context/ThemeContext';
-
-const productsData = require('../Products.json');
+import axiosInstance from '../api/axiosInstance';
+import { useAuthStore } from '../store/authStore';
 
 type ProductDetailsScreenRouteProp = RouteProp<RootStackParamList, 'ProductDetails'>;
+
 interface ProductDetailsScreenProps {
   route: ProductDetailsScreenRouteProp;
 }
@@ -26,22 +28,61 @@ const ProductDetailsScreen: React.FC<ProductDetailsScreenProps> = ({ route }) =>
   const { theme, colors } = useTheme();
   const { productId } = route.params;
   const navigation = useNavigation();
+
+  const accessToken = useAuthStore((state) => state.accessToken);
+
+  const [product, setProduct] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-
-  const product = productsData.data.find((item: any) => item._id === productId);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const dynamicStyles = styles(colors);
 
-  if (!product) {
-    return (
-      <View style={dynamicStyles.centered}>
-        <Text style={dynamicStyles.notFoundText}>Product not found.</Text>
-      </View>
-    );
-  }
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!accessToken) {
+        setError('No access token. Please log in.');
+        setLoading(false);
+        return;
+      }
+      if (!productId) {
+        setError('Invalid product ID.');
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        console.log('Using token:', accessToken); // Debug: log token
+
+        const response = await axiosInstance.get(`/api/products/${productId}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        setProduct(response.data);
+      } catch (err: any) {
+        console.error('API error status:', err.response?.status);
+        console.error('API error response:', err.response?.data);
+        setError(
+          err.response?.data?.message ||
+          err.response?.statusText ||
+          'Failed to fetch product'
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [productId, accessToken]);
 
   const onShare = async () => {
+    if (!product) return;
     try {
       await Share.share({
         message: `Check out this product: ${product.title} - ${product.description}`,
@@ -52,8 +93,39 @@ const ProductDetailsScreen: React.FC<ProductDetailsScreenProps> = ({ route }) =>
   };
 
   const addToCart = () => {
+    if (!product) return;
     console.log(`Added ${quantity} of ${product.title} to cart`);
   };
+
+  if (loading) {
+    return (
+      <View style={dynamicStyles.centered}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={dynamicStyles.centered}>
+        <Text style={dynamicStyles.notFoundText}>{error}</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Text style={{ color: colors.primary, marginTop: 10 }}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (!product) {
+    return (
+      <View style={dynamicStyles.centered}>
+        <Text style={dynamicStyles.notFoundText}>Product not found.</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Text style={{ color: colors.primary, marginTop: 10 }}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={dynamicStyles.container}>

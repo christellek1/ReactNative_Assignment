@@ -51,7 +51,6 @@ const UploadImage = ({ navigation }: { navigation: any }) => {
       formData.append('description', data.description);
       formData.append('price', data.price);
 
-      // Placeholder location for now (we'll add dynamic map later)
       const defaultLocation = {
         name: 'Unknown',
         longitude: 0,
