@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,11 +10,31 @@ import {
   Alert,
   ActivityIndicator,
   Image,
+  Modal,
+  Dimensions,
+  Platform,
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import Navbar from '../components/molecules/Navbar';
 import { useAuthStore } from '../store/authStore';
-import axiosInstance from '../api/axiosInstance'; 
+import axiosInstance from '../api/axiosInstance';
+
+// Try to import camera, but handle if it's not available
+let Camera, useCameraDevices, useCameraPermission;
+let cameraAvailable = false;
+
+try {
+  const cameraModule = require('react-native-vision-camera');
+  Camera = cameraModule.Camera;
+  useCameraDevices = cameraModule.useCameraDevices;
+  useCameraPermission = cameraModule.useCameraPermission;
+  cameraAvailable = true;
+} catch (error) {
+  console.log('React Native Vision Camera not available, using fallback');
+  cameraAvailable = false;
+}
+
+const { width, height } = Dimensions.get('window');
 
 const ProfileScreen = ({ navigation }: { navigation: any }) => {
   const { theme, colors } = useTheme();
@@ -33,8 +53,170 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [originalData, setOriginalData] = useState({ firstName: '', lastName: '', email: '' });
 
+  // Camera related states
+  const [isCameraVisible, setIsCameraVisible] = useState(false);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+
   const logout = useAuthStore((state) => state.logout);
   const accessToken = useAuthStore((state) => state.accessToken);
+
+  // Camera setup - only if camera is available
+  const camera = useRef<any>(null);
+  let devices, device, hasPermission, requestPermission;
+
+  if (cameraAvailable && useCameraDevices && useCameraPermission) {
+    try {
+      devices = useCameraDevices();
+      device = devices?.front || devices?.back;
+      const permissionHook = useCameraPermission();
+      hasPermission = permissionHook.hasPermission;
+      requestPermission = permissionHook.requestPermission;
+    } catch (error) {
+      console.log('Error setting up camera hooks:', error);
+    }
+  }
+
+  // Request camera permission
+  const requestCameraPermission = async () => {
+    if (!cameraAvailable || !requestPermission) {
+      Alert.alert(
+        'Camera Not Available',
+        'Camera functionality is not available. Please check your installation.',
+        [{ text: 'OK' }]
+      );
+      return false;
+    }
+
+    try {
+      const permission = await requestPermission();
+      if (!permission) {
+        Alert.alert(
+          'Permission Required',
+          'Camera permission is required to take profile photos.',
+          [{ text: 'OK' }]
+        );
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('Error requesting camera permission:', error);
+      Alert.alert(
+        'Error',
+        'Failed to request camera permission.',
+        [{ text: 'OK' }]
+      );
+      return false;
+    }
+  };
+
+  // Open camera modal
+  const openCamera = async () => {
+    if (!cameraAvailable) {
+      Alert.alert(
+        'Camera Not Available',
+        'React Native Vision Camera is not properly installed. Please install it first:\n\nnpm install react-native-vision-camera\n\nThen follow the platform-specific setup instructions.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    const hasPermission = await requestCameraPermission();
+    if (hasPermission && device) {
+      setIsCameraVisible(true);
+    } else if (!device) {
+      Alert.alert('Error', 'No camera device available');
+    }
+  };
+
+  // Capture photo
+  const capturePhoto = async () => {
+    if (!camera.current || !cameraAvailable) return;
+
+    try {
+      setIsCapturing(true);
+      const photo = await camera.current.takePhoto({
+        qualityPrioritization: 'quality',
+        flash: 'off',
+        enableAutoRedEyeReduction: true,
+      });
+
+      const imageUri = `file://${photo.path}`;
+      setCapturedImage(imageUri);
+      setIsCameraVisible(false);
+      
+      // Upload the image
+      await uploadProfileImage(imageUri);
+    } catch (error) {
+      console.error('Error capturing photo:', error);
+      Alert.alert('Error', 'Failed to capture photo. Please try again.');
+    } finally {
+      setIsCapturing(false);
+    }
+  };
+
+  // Upload profile image
+  const uploadProfileImage = async (imageUri: string) => {
+    if (!accessToken) {
+      Alert.alert('Authentication Error', 'Please log in again');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      
+      const formData = new FormData();
+      formData.append('profileImage', {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: 'profile.jpg',
+      } as any);
+
+      const response = await axiosInstance.put('/api/user/profile-image', formData, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.success) {
+        setProfileImage(imageUri);
+        Alert.alert('Success', 'Profile image updated successfully');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      
+      if (error.response?.status === 401) {
+        Alert.alert(
+          'Session Expired', 
+          'Your session has expired. Please log in again.',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                logout();
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Auth' }],
+                });
+              }
+            }
+          ]
+        );
+      } else {
+        const errorMessage = error.response?.data?.message || 'Failed to update profile image';
+        Alert.alert('Error', errorMessage);
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Close camera modal
+  const closeCameraModal = () => {
+    setIsCameraVisible(false);
+    setCapturedImage(null);
+  };
 
   // Fetch user profile data
   const fetchUserProfile = async () => {
@@ -340,8 +522,11 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
             <View style={styles.profileImageSection}>
               <Text style={styles.label}>Profile Picture</Text>
               <View style={styles.profileImageContainer}>
-                {profileImage ? (
-                  <Image source={{ uri: profileImage }} style={styles.profileImage} />
+                {profileImage || capturedImage ? (
+                  <Image 
+                    source={{ uri: capturedImage || profileImage }} 
+                    style={styles.profileImage} 
+                  />
                 ) : (
                   <View style={styles.profileImagePlaceholder}>
                     <Text style={styles.profileImagePlaceholderText}>
@@ -349,8 +534,18 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
                     </Text>
                   </View>
                 )}
-                <TouchableOpacity style={styles.changeImageButton}>
-                  <Text style={styles.changeImageButtonText}>Change Photo</Text>
+                <TouchableOpacity 
+                  style={styles.changeImageButton}
+                  onPress={openCamera}
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <ActivityIndicator size="small" color={colors.text} />
+                  ) : (
+                    <Text style={styles.changeImageButtonText}>
+                      {cameraAvailable ? 'Take Photo' : 'Camera Not Available'}
+                    </Text>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
@@ -361,7 +556,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
               value={firstName}
               onChangeText={setFirstName}
               placeholder="Enter your first name"
-              placeholderTextColor={ "rgba(255,255,255,0.6)"}
+              placeholderTextColor="rgba(255,255,255,0.6)"
               editable={!isSaving}
             />
 
@@ -371,7 +566,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
               value={lastName}
               onChangeText={setLastName}
               placeholder="Enter your last name"
-              placeholderTextColor={"rgba(255,255,255,0.6)"}
+              placeholderTextColor="rgba(255,255,255,0.6)"
               editable={!isSaving}
             />
 
@@ -380,7 +575,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
               style={[styles.input, styles.disabledInput]}
               value={email}
               placeholder="Email address"
-              placeholderTextColor={"rgba(255,255,255,0.6)"}
+              placeholderTextColor="rgba(255,255,255,0.6)"
               keyboardType="email-address"
               autoCapitalize="none"
               editable={false}
@@ -424,7 +619,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
               onChangeText={setCurrentPassword}
               secureTextEntry
               placeholder="Enter current password"
-              placeholderTextColor={ "rgba(255,255,255,0.6)"}
+              placeholderTextColor="rgba(255,255,255,0.6)"
               editable={!isSaving}
             />
 
@@ -435,7 +630,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
               onChangeText={setNewPassword}
               secureTextEntry
               placeholder="Enter new password (min. 6 characters)"
-              placeholderTextColor={ "rgba(255,255,255,0.6)"}
+              placeholderTextColor="rgba(255,255,255,0.6)"
               editable={!isSaving}
             />
 
@@ -446,7 +641,7 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
               onChangeText={setConfirmPassword}
               secureTextEntry
               placeholder="Confirm new password"
-              placeholderTextColor={ "rgba(255,255,255,0.6)"}
+              placeholderTextColor="rgba(255,255,255,0.6)"
               editable={!isSaving}
             />
 
@@ -469,6 +664,65 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
           </View>
         )}
       </ScrollView>
+
+      {/* Camera Modal - Only render if camera is available */}
+      {cameraAvailable && Camera && (
+        <Modal
+          visible={isCameraVisible}
+          animationType="slide"
+          statusBarTranslucent
+          onRequestClose={closeCameraModal}
+        >
+          <View style={styles.cameraContainer}>
+            {device && hasPermission ? (
+              <>
+                <Camera
+                  ref={camera}
+                  style={styles.camera}
+                  device={device}
+                  isActive={isCameraVisible}
+                  photo={true}
+                />
+                
+                <View style={styles.cameraControls}>
+                  <TouchableOpacity
+                    style={styles.cameraCloseButton}
+                    onPress={closeCameraModal}
+                  >
+                    <Text style={styles.cameraButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    style={[styles.cameraCaptureButton, isCapturing && styles.capturingButton]}
+                    onPress={capturePhoto}
+                    disabled={isCapturing}
+                  >
+                    {isCapturing ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <View style={styles.captureButtonInner} />
+                    )}
+                  </TouchableOpacity>
+                  
+                  <View style={styles.placeholderButton} />
+                </View>
+              </>
+            ) : (
+              <View style={styles.cameraError}>
+                <Text style={styles.cameraErrorText}>
+                  {!device ? 'No camera device available' : 'Camera permission required'}
+                </Text>
+                <TouchableOpacity
+                  style={styles.cameraCloseButton}
+                  onPress={closeCameraModal}
+                >
+                  <Text style={styles.cameraButtonText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </Modal>
+      )}
 
       <Navbar
         activeTab={activeTab}
@@ -585,6 +839,9 @@ const createStyles = (colors: any, theme: string) =>
       paddingHorizontal: 16,
       backgroundColor: colors.buttonBackground,
       borderRadius: 6,
+      minHeight: 32,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     changeImageButtonText: {
       color: colors.text,
@@ -655,6 +912,72 @@ const createStyles = (colors: any, theme: string) =>
     disabledButton: {
       backgroundColor: colors.border,
       opacity: 0.6,
+    },
+    // Camera Modal Styles
+    cameraContainer: {
+      flex: 1,
+      backgroundColor: '#000',
+    },
+    camera: {
+      flex: 1,
+    },
+    cameraControls: {
+      position: 'absolute',
+      bottom: 50,
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 50,
+    },
+    cameraCloseButton: {
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      borderRadius: 25,
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.3)',
+    },
+    cameraButtonText: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    cameraCaptureButton: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: 'rgba(255, 255, 255, 0.3)',
+      borderWidth: 4,
+      borderColor: '#fff',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    capturingButton: {
+      opacity: 0.7,
+    },
+    captureButtonInner: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      backgroundColor: '#fff',
+    },
+    placeholderButton: {
+      width: 60,
+      height: 40,
+    },
+    cameraError: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+    },
+    cameraErrorText: {
+      color: '#fff',
+      fontSize: 18,
+      textAlign: 'center',
+      marginBottom: 30,
     },
   });
 
