@@ -9,10 +9,13 @@ import {
   Alert,
   ActivityIndicator,
   SafeAreaView,
+  Image,
+  Platform,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { launchImageLibrary, launchCamera, ImagePickerResponse, MediaType, ImageLibraryOptions, CameraOptions } from 'react-native-image-picker';
 import { addProduct } from '../api/product';
 import { useTheme } from '../context/ThemeContext';
 import Navbar from '../components/molecules/Navbar';
@@ -21,10 +24,16 @@ import MapView, { Marker, MapPressEvent } from 'react-native-maps';
 const schema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().min(1, 'Description is required'),
-  price: z.string().min(1, 'Price is required'),
+  price: z.string().min(1, 'Price is required').regex(/^\d+(\.\d{1,2})?$/, 'Please enter a valid price'),
 });
 
 type FormData = z.infer<typeof schema>;
+
+interface ImageAsset {
+  uri: string;
+  type: string;
+  fileName: string;
+}
 
 const UploadImage = ({ navigation }: { navigation: any }) => {
   const { theme, colors } = useTheme();
@@ -32,6 +41,7 @@ const UploadImage = ({ navigation }: { navigation: any }) => {
   const [activeTab, setActiveTab] = useState('Add');
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [selectedImages, setSelectedImages] = useState<ImageAsset[]>([]);
 
   const {
     control,
@@ -45,9 +55,79 @@ const UploadImage = ({ navigation }: { navigation: any }) => {
     setLocation(coordinate);
   };
 
+  const showImagePicker = () => {
+    Alert.alert(
+      'Select Images',
+      'Choose how you want to select images',
+      [
+        {
+          text: 'Camera',
+          onPress: () => openCamera(),
+        },
+        {
+          text: 'Gallery',
+          onPress: () => openGallery(),
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+      ]
+    );
+  };
+
+  const openCamera = () => {
+    const options: CameraOptions = {
+      mediaType: 'photo',
+      quality: 0.8,
+      includeBase64: false,
+    };
+
+    launchCamera(options, (response: ImagePickerResponse) => {
+      if (response.assets && response.assets[0]) {
+        const asset = response.assets[0];
+        const newImage: ImageAsset = {
+          uri: asset.uri!,
+          type: asset.type!,
+          fileName: asset.fileName || `image_${Date.now()}.jpg`,
+        };
+        setSelectedImages(prev => [...prev, newImage]);
+      }
+    });
+  };
+
+  const openGallery = () => {
+    const options: ImageLibraryOptions = {
+      mediaType: 'photo',
+      quality: 0.8,
+      selectionLimit: 5, // Allow multiple images
+      includeBase64: false,
+    };
+
+    launchImageLibrary(options, (response: ImagePickerResponse) => {
+      if (response.assets) {
+        const newImages: ImageAsset[] = response.assets.map(asset => ({
+          uri: asset.uri!,
+          type: asset.type!,
+          fileName: asset.fileName || `image_${Date.now()}.jpg`,
+        }));
+        setSelectedImages(prev => [...prev, ...newImages]);
+      }
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
   const onSubmit = async (data: FormData) => {
     if (!location) {
       Alert.alert('Location required', 'Please select a location on the map.');
+      return;
+    }
+
+    if (selectedImages.length === 0) {
+      Alert.alert('Images required', 'Please select at least one image.');
       return;
     }
 
@@ -62,10 +142,20 @@ const UploadImage = ({ navigation }: { navigation: any }) => {
         JSON.stringify({ latitude: location.latitude, longitude: location.longitude })
       );
 
+      // Append images to FormData
+      selectedImages.forEach((image, index) => {
+        formData.append('images', {
+          uri: image.uri,
+          type: image.type,
+          name: image.fileName,
+        } as any);
+      });
+
       await addProduct(formData);
-      Alert.alert('Success', 'Product uploaded!');
+      Alert.alert('Success', 'Product uploaded successfully!');
       reset();
       setLocation(null);
+      setSelectedImages([]);
     } catch (error: any) {
       Alert.alert('Error', error?.message || 'Something went wrong');
     } finally {
@@ -87,7 +177,6 @@ const UploadImage = ({ navigation }: { navigation: any }) => {
               <TextInput
                 style={styles.input}
                 placeholder="Enter product title"
-                placeholderTextColor="white"
                 value={value}
                 onChangeText={onChange}
               />
@@ -103,7 +192,6 @@ const UploadImage = ({ navigation }: { navigation: any }) => {
               <TextInput
                 style={[styles.input, styles.textArea]}
                 placeholder="Enter description"
-                placeholderTextColor="white"
                 multiline
                 value={value}
                 onChangeText={onChange}
@@ -112,15 +200,14 @@ const UploadImage = ({ navigation }: { navigation: any }) => {
           />
           {errors.description && <Text style={styles.error}>{errors.description.message}</Text>}
 
-          <Text style={styles.label}>Price</Text>
+          <Text style={styles.label}>Price ($)</Text>
           <Controller
             control={control}
             name="price"
             render={({ field: { onChange, value } }) => (
               <TextInput
                 style={styles.input}
-                placeholder="Enter price"
-                placeholderTextColor="white"
+                placeholder="0.00"
                 keyboardType="numeric"
                 value={value}
                 onChangeText={onChange}
@@ -128,6 +215,29 @@ const UploadImage = ({ navigation }: { navigation: any }) => {
             )}
           />
           {errors.price && <Text style={styles.error}>{errors.price.message}</Text>}
+
+          <Text style={styles.label}>Images</Text>
+          <TouchableOpacity style={styles.imagePickerButton} onPress={showImagePicker}>
+            <Text style={styles.imagePickerButtonText}>
+              {selectedImages.length > 0 ? `${selectedImages.length} image(s) selected` : 'Select Images'}
+            </Text>
+          </TouchableOpacity>
+
+          {selectedImages.length > 0 && (
+            <ScrollView horizontal style={styles.imagePreviewContainer} showsHorizontalScrollIndicator={false}>
+              {selectedImages.map((image, index) => (
+                <View key={index} style={styles.imagePreview}>
+                  <Image source={{ uri: image.uri }} style={styles.previewImage} />
+                  <TouchableOpacity
+                    style={styles.removeImageButton}
+                    onPress={() => removeImage(index)}
+                  >
+                    <Text style={styles.removeImageText}>×</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+          )}
 
           <Text style={styles.label}>Select Location</Text>
           <MapView
@@ -146,7 +256,7 @@ const UploadImage = ({ navigation }: { navigation: any }) => {
           </MapView>
 
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleSubmit(onSubmit)}
             disabled={loading}
           >
@@ -224,6 +334,48 @@ const createStyles = (colors: any, theme: string) =>
       fontSize: 14,
       marginBottom: 12,
     },
+    imagePickerButton: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      alignItems: 'center',
+      backgroundColor: colors.inputBackground,
+      marginBottom: 12,
+    },
+    imagePickerButtonText: {
+      color: colors.text,
+      fontSize: 16,
+    },
+    imagePreviewContainer: {
+      marginBottom: 16,
+    },
+    imagePreview: {
+      position: 'relative',
+      marginRight: 10,
+    },
+    previewImage: {
+      width: 80,
+      height: 80,
+      borderRadius: 8,
+    },
+    removeImageButton: {
+      position: 'absolute',
+      top: -5,
+      right: -5,
+      backgroundColor: colors.error,
+      borderRadius: 12,
+      width: 24,
+      height: 24,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    removeImageText: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
     map: {
       height: 200,
       borderRadius: 10,
@@ -235,6 +387,9 @@ const createStyles = (colors: any, theme: string) =>
       borderRadius: 8,
       alignItems: 'center',
       marginTop: 12,
+    },
+    buttonDisabled: {
+      opacity: 0.6,
     },
     buttonText: {
       color: '#fff',
