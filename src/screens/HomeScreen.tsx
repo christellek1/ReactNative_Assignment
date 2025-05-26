@@ -100,7 +100,7 @@ const SkeletonCard = ({ colors, theme }: { colors: any; theme: string }) => {
   };
 
   return (
-    <Animated.View style={[skeletonStyles.container, { opacity }]}>
+    <Animated.View style={[skeletonStyles.container , { opacity }]}>
       <Animated.View style={skeletonStyles.imageContainer} />
       <Animated.View style={skeletonStyles.textLine} />
       <View style={skeletonStyles.priceContainer}>

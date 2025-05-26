@@ -1,11 +1,10 @@
-// src/components/molecules/Navbar.tsx
 import React from 'react';
 import { View, TouchableOpacity, Image } from 'react-native';
 import images from '../../assets/images';
 import { createStyles } from '../../../styles/NavbarStyle';
 import { useTheme } from '../../context/ThemeContext';
 
-const { home: HomeImage, plus: AddImage, user: ProfileImage } = images;
+const { home: HomeImage, plus: AddImage, user: ProfileImage, cart: cart } = images;
 
 interface NavbarProps {
   activeTab: string;
@@ -30,6 +29,19 @@ const Navbar = ({ activeTab, navigation, colors, theme, setActiveTab }: NavbarPr
         <Image
           source={HomeImage}
           style={[styles.navIcon, { tintColor: activeTab === 'Home' ? '#fff' : '#333' }]}
+        />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => {
+          setActiveTab('Cart');
+          navigation.navigate('Cart');
+        }}
+        style={[styles.navButton, activeTab === 'Cart' && styles.activeNavButton]}
+      >
+        <Image
+          source={cart}
+          style={[styles.navIcon, { tintColor: activeTab === 'Cart' ? '#fff' : '#333' }]}
         />
       </TouchableOpacity>
 

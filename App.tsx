@@ -8,7 +8,9 @@ import HomeScreen from './src/screens/HomeScreen';
 import SignUp from './src/screens/SignUpScreen';
 import ProductDetails from './src/screens/ProductDetailsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
-import UploadImage from './src/screens/UploadImage'; // PascalCase import
+import UploadImage from './src/screens/UploadImage'; 
+import CartScreen from './src/screens/cartScreen';
+
 
 import { AuthProvider } from './src/context/AuthContext';
 import { ThemeProvider } from './src/context/ThemeContext';
@@ -20,7 +22,8 @@ export type RootStackParamList = {
   SignUp: undefined;
   ProductDetails: { productId: string };
   ProfileScreen: undefined;
-  UploadImage: undefined; // PascalCase route name
+  UploadImage: undefined; 
+  Cart: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -66,6 +69,12 @@ const App: React.FC = () => {
               component={UploadImage} 
               options={{ headerShown: false }}
             />
+                        <Stack.Screen
+              name="Cart"   
+              component={CartScreen} 
+              options={{ headerShown: false }}
+            />
+            
           </Stack.Navigator>
         </NavigationContainer>
       </ThemeProvider>
