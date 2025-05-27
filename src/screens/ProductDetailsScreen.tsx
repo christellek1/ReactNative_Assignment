@@ -20,6 +20,7 @@ import styles from '../../styles/Details';
 import { useTheme } from '../context/ThemeContext';
 import axiosInstance from '../api/axiosInstance';
 import { useAuthStore } from '../store/authStore';
+import { useCartStore } from '../store/cartStore';
 
 type ProductDetailsScreenRouteProp = RouteProp<RootStackParamList, 'ProductDetails'>;
 
@@ -309,18 +310,18 @@ const ProductDetailsScreen: React.FC<ProductDetailsScreenProps> = ({ route }) =>
   };
 
   // Add to cart functionality
-  const addToCart = async () => {
-    if (!product || addingToCart) return;
+const addToCart = () => {
+  if (!product) return;
 
-    // For now, just show a success message since we don't know your cart API endpoint
-    Alert.alert(
-      'Added to Cart',
-      `${quantity} ${product.title}${quantity > 1 ? 's' : ''} added to cart!`,
-      [{ text: 'OK' }]
-    );
+  useCartStore.getState().addToCart({
+    _id: product._id,
+    title: product.title,
+    price: safeNumber(product.price),
+    image: product.images[0]?.url || '',
+    quantity,
+  });
 
-   
-  };
+};
 
   // Quantity handlers
   const decreaseQuantity = () => {
