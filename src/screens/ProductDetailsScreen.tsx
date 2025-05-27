@@ -21,6 +21,7 @@ import { useTheme } from '../context/ThemeContext';
 import axiosInstance from '../api/axiosInstance';
 import { useAuthStore } from '../store/authStore';
 import { useCartStore } from '../store/cartStore';
+import Toast from 'react-native-toast-message';
 
 type ProductDetailsScreenRouteProp = RouteProp<RootStackParamList, 'ProductDetails'>;
 
@@ -321,6 +322,13 @@ const addToCart = () => {
     quantity,
   });
 
+  Toast.show({
+    type: 'success',
+    text1: 'Product Added',
+    text2: `${product.title} was added to the cart.`,
+    position: 'top',
+    visibilityTime: 3000,
+  });
 };
 
   // Quantity handlers
