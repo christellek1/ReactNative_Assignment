@@ -6,39 +6,53 @@ interface ToastProps {
   text2?: string;
 }
 
-const CustomToast = ({ text1, text2 }: ToastProps) => {
+const CustomToast: React.FC<ToastProps> = ({ text1, text2 }) => {
   return (
     <View style={styles.toastContainer}>
-      <Text style={styles.title}>{text1}</Text>
-      {text2 ? <Text style={styles.message}>{text2}</Text> : null}
+      <View style={styles.accentLine} />
+      <View style={styles.content}>
+        <Text style={styles.title}>{text1}</Text>
+        {text2 && <Text style={styles.message}>{text2}</Text>}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   toastContainer: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#1e1e2f', 
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 12,
-    marginHorizontal: 20,
-    elevation: 5,
+    borderRadius: 16,
+    marginTop: 30,
+    marginHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
     shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+  },
+  accentLine: {
+    width: 6,
+    height: '100%',
+    backgroundColor: '#8e44ad', 
+    borderRadius: 4,
+    marginRight: 16,
+  },
+  content: {
+    flex: 1,
   },
   title: {
-    color: '#fff',
+    color: '#ffffff',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
     marginBottom: 4,
-    textAlign: 'center',
   },
   message: {
-    color: '#fff',
-    fontSize: 16,
-    textAlign: 'center',
+    color: '#d1cce8', 
+    fontSize: 15,
   },
 });
 

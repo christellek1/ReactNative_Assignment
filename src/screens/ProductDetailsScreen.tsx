@@ -311,7 +311,7 @@ const ProductDetailsScreen: React.FC<ProductDetailsScreenProps> = ({ route }) =>
   };
 
   // Add to cart functionality
-const addToCart = () => {
+ const addToCart = () => {
   if (!product) return;
 
   useCartStore.getState().addToCart({
@@ -324,10 +324,11 @@ const addToCart = () => {
 
   Toast.show({
     type: 'success',
-    text1: 'Product Added',
-    text2: `${product.title} was added to the cart.`,
+    text1: 'Added to Cart',
+    text2: `${product.title} has been added.`,
     position: 'top',
     visibilityTime: 3000,
+    topOffset: 20,
   });
 };
 

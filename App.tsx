@@ -1,4 +1,3 @@
-// App.tsx
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -10,11 +9,13 @@ import ProductDetails from './src/screens/ProductDetailsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import UploadImage from './src/screens/UploadImage'; 
 import CartScreen from './src/screens/cartScreen';
+import CustomButton from './src/components/atoms/Button';
 
 import { AuthProvider } from './src/context/AuthContext';
 import { ThemeProvider } from './src/context/ThemeContext';
 
 import Toast from 'react-native-toast-message'; 
+import CustomToast from './src/components/molecules/CustomToast';
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -28,6 +29,13 @@ export type RootStackParamList = {
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+// ✅ Add toast config
+const toastConfig = {
+  success: ({ text1, text2 }: any) => (
+    <CustomToast text1={text1} text2={text2} />
+  ),
+};
 
 const App: React.FC = () => {
   return (
@@ -45,7 +53,8 @@ const App: React.FC = () => {
             <Stack.Screen name="Cart" component={CartScreen} options={{ headerShown: false }} />
           </Stack.Navigator>
 
-          <Toast />
+          {/* ✅ Pass toastConfig and show at top */}
+          <Toast config={toastConfig} position="top" />
         </NavigationContainer>
       </ThemeProvider>
     </AuthProvider>
