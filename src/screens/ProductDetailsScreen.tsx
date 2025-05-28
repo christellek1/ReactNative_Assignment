@@ -111,9 +111,8 @@ const ProductDetailsScreen: React.FC<ProductDetailsScreenProps> = ({ route }) =>
 
       // Ensure the URL is properly formatted
       if (imageUrl && !imageUrl.startsWith('http')) {
-        // If it's a relative path, prepend your base URL
-        // Replace 'YOUR_BASE_URL' with your actual server base URL
-        const baseUrl = axiosInstance.defaults.baseURL || 'YOUR_BASE_URL';
+
+        const baseUrl = axiosInstance.defaults.baseURL ;
         imageUrl = `${baseUrl}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
       }
 
@@ -152,12 +151,8 @@ const ProductDetailsScreen: React.FC<ProductDetailsScreenProps> = ({ route }) =>
       console.log('Fetching product with ID:', productId);
       console.log('Using access token:', accessToken ? 'Present' : 'Missing');
 
-      // Updated API endpoint - using /api/posts if that's your correct endpoint
-      // Change this to match your actual product endpoint
       const endpoint = `/api/products/${productId}`;
-      // If you're using posts endpoint, uncomment the line below:
-      // const endpoint = `/api/posts/${productId}`;
-      
+
       const response = await axiosInstance.get(endpoint, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -166,8 +161,6 @@ const ProductDetailsScreen: React.FC<ProductDetailsScreenProps> = ({ route }) =>
         timeout: 15000, // 15 second timeout
       });
 
-      console.log('API Response Status:', response.status);
-      console.log('API Response Data:', JSON.stringify(response.data, null, 2));
 
       if (response.data) {
         // Handle both direct product data and nested data structures
