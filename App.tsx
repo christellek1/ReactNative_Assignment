@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
 import AuthScreen from './src/screens/LoginScreen';
 import OTPScreen from './src/screens/OTP';
 import HomeScreen from './src/screens/HomeScreen';
@@ -9,7 +10,6 @@ import ProductDetails from './src/screens/ProductDetailsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import UploadImage from './src/screens/UploadImage'; 
 import CartScreen from './src/screens/cartScreen';
-import CustomButton from './src/components/atoms/Button';
 
 import { AuthProvider } from './src/context/AuthContext';
 import { ThemeProvider } from './src/context/ThemeContext';
@@ -30,18 +30,33 @@ export type RootStackParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-// ✅ Add toast config
 const toastConfig = {
   success: ({ text1, text2 }: any) => (
     <CustomToast text1={text1} text2={text2} />
   ),
 };
 
+const linking = {
+  prefixes: ['myshopapp://'], 
+  config: {
+    screens: {
+      Auth: 'auth',
+      OTP: 'otp/:email',
+      Home: 'home',
+      SignUp: 'signup',
+      ProductDetails: 'product/:productId',
+      ProfileScreen: 'profile',
+      UploadImage: 'upload',
+      Cart: 'cart',
+    },
+  },
+};
+
 const App: React.FC = () => {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <NavigationContainer>
+        <NavigationContainer linking={linking}>
           <Stack.Navigator initialRouteName="Auth">
             <Stack.Screen name="Auth" component={AuthScreen} options={{ headerShown: false }} />
             <Stack.Screen name="OTP" component={OTPScreen} options={{ headerShown: false }} />
@@ -52,8 +67,6 @@ const App: React.FC = () => {
             <Stack.Screen name="UploadImage" component={UploadImage} options={{ headerShown: false }} />
             <Stack.Screen name="Cart" component={CartScreen} options={{ headerShown: false }} />
           </Stack.Navigator>
-
-          {/* ✅ Pass toastConfig and show at top */}
           <Toast config={toastConfig} position="top" />
         </NavigationContainer>
       </ThemeProvider>

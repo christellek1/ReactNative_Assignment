@@ -13,6 +13,7 @@ import {
   RefreshControl,
   FlatList,
   Dimensions,
+  Linking,
 } from 'react-native';
 import { RouteProp, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../App';
@@ -111,8 +112,7 @@ const ProductDetailsScreen: React.FC<ProductDetailsScreenProps> = ({ route }) =>
 
       // Ensure the URL is properly formatted
       if (imageUrl && !imageUrl.startsWith('http')) {
-
-        const baseUrl = axiosInstance.defaults.baseURL ;
+        const baseUrl = axiosInstance.defaults.baseURL;
         imageUrl = `${baseUrl}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
       }
 
@@ -127,6 +127,63 @@ const ProductDetailsScreen: React.FC<ProductDetailsScreenProps> = ({ route }) =>
       };
     });
   };
+
+  // Generate deep link URL
+  const generateDeepLink = (productId: string): string => {
+    return `yourapp://products/${productId}`;
+  };
+
+  // Share functionality with deep link
+  const onShare = async () => {
+    if (!product) return;
+    
+    try {
+      const deepLink = generateDeepLink(product._id);
+      const shareContent = {
+        message: `Check out ${product.title}!\n\nPrice: $${formatPrice(product.price)}\n\n${product.description}\n\nView in app: ${deepLink}`,
+        url: deepLink, // For platforms that support URL sharing
+        title: product.title
+      };
+      
+      await Share.share(shareContent);
+    } catch (error) {
+      console.error('Share error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Share Failed',
+        text2: 'Could not share the product',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+    }
+  };
+
+  // Handle deep link when app is opened
+  useEffect(() => {
+    const handleDeepLink = (url: string | null) => {
+      if (!url) return;
+      
+      // Extract product ID from URL
+      const productIdMatch = url.match(/yourapp:\/\/products\/([^/]+)/);
+      if (productIdMatch && productIdMatch[1]) {
+        const deepLinkProductId = productIdMatch[1];
+        if (deepLinkProductId !== productId) {
+          // Navigate to the product if it's different from current one
+          navigation.navigate('ProductDetails', { productId: deepLinkProductId });
+        }
+      }
+    };
+
+    // Get initial URL if app was launched from a deep link
+    Linking.getInitialURL().then(handleDeepLink);
+
+    // Listen for URL events when app is running
+    const subscription = Linking.addEventListener('url', ({ url }) => handleDeepLink(url));
+
+    return () => {
+      subscription.remove();
+    };
+  }, [productId, navigation]);
 
   // Fetch product data
   const fetchProduct = useCallback(async (showLoading = true) => {
@@ -160,7 +217,6 @@ const ProductDetailsScreen: React.FC<ProductDetailsScreenProps> = ({ route }) =>
         },
         timeout: 15000, // 15 second timeout
       });
-
 
       if (response.data) {
         // Handle both direct product data and nested data structures
@@ -288,42 +344,27 @@ const ProductDetailsScreen: React.FC<ProductDetailsScreenProps> = ({ route }) =>
     );
   };
 
-  // Share functionality
-  const onShare = async () => {
-    if (!product) return;
-    
-    try {
-      const shareContent = {
-        message: `Check out ${product.title}!\n\nPrice: $${formatPrice(product.price)}\n\n${product.description}`,
-      };
-      
-      await Share.share(shareContent);
-    } catch (error) {
-      console.error('Share error:', error);
-    }
-  };
-
   // Add to cart functionality
- const addToCart = () => {
-  if (!product) return;
+  const addToCart = () => {
+    if (!product) return;
 
-  useCartStore.getState().addToCart({
-    _id: product._id,
-    title: product.title,
-    price: safeNumber(product.price),
-    image: product.images[0]?.url || '',
-    quantity,
-  });
+    useCartStore.getState().addToCart({
+      _id: product._id,
+      title: product.title,
+      price: safeNumber(product.price),
+      image: product.images[0]?.url || '',
+      quantity,
+    });
 
-  Toast.show({
-    type: 'success',
-    text1: 'Added to Cart',
-    text2: `${product.title} has been added.`,
-    position: 'top',
-    visibilityTime: 3000,
-    topOffset: 20,
-  });
-};
+    Toast.show({
+      type: 'success',
+      text1: 'Added to Cart',
+      text2: `${product.title} has been added.`,
+      position: 'top',
+      visibilityTime: 3000,
+      topOffset: 20,
+    });
+  };
 
   // Quantity handlers
   const decreaseQuantity = () => {
@@ -419,7 +460,7 @@ const ProductDetailsScreen: React.FC<ProductDetailsScreenProps> = ({ route }) =>
           {product.title}
         </Text>
         <TouchableOpacity style={dynamicStyles.headerButton} onPress={onShare}>
-          <Text style={dynamicStyles.headerButtonText}>⋮</Text>
+          <Text style={dynamicStyles.headerButtonText}>Share</Text>
         </TouchableOpacity>
       </View>
 
